@@ -1,0 +1,42 @@
+<div class="scan-container">
+  <mat-card class="scan-card">
+    <mat-card-header>
+      <mat-card-title>Bluetooth Scanner</mat-card-title>
+      <mat-card-subtitle>Find and connect to your BLE device</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="status-area">
+        <p *ngIf="error$ | async as error" class="error-text">
+          <mat-icon>error</mat-icon> {{ error }}
+        </p>
+
+        <div *ngIf="device$ | async as device; else noDevice">
+          <div class="device-info">
+            <mat-icon class="device-icon">bluetooth_connected</mat-icon>
+            <h3>{{ device.name || 'Unknown Device' }}</h3>
+            <p>ID: {{ device.id }}</p>
+            <p class="status-badge connected">Connected</p>
+          </div>
+        </div>
+
+        <ng-template #noDevice>
+          <div class="placeholder">
+            <mat-icon class="placeholder-icon">bluetooth_searching</mat-icon>
+            <p>No device connected</p>
+          </div>
+        </ng-template>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" (click)="scan()" *ngIf="!(connectionStatus$ | async)">
+        <mat-icon>search</mat-icon> Scan for Devices
+      </button>
+      
+      <button mat-raised-button color="accent" (click)="goToDashboard()" *ngIf="connectionStatus$ | async">
+        <mat-icon>dashboard</mat-icon> Open Dashboard
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

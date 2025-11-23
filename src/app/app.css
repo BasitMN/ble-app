@@ -1,0 +1,16 @@
+.spacer {
+    flex: 1 1 auto;
+}
+
+.content {
+    padding: 20px;
+    height: calc(100vh - 64px);
+    box-sizing: border-box;
+    overflow: auto;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    background-color: #fafafa;
+}
