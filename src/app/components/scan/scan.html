@@ -1,4 +1,5 @@
 <div class="scan-container">
+  <!-- Main Scanner Card -->
   <mat-card class="scan-card">
     <mat-card-header>
       <mat-card-title>Bluetooth Scanner</mat-card-title>
@@ -11,12 +12,40 @@
           <mat-icon>error</mat-icon> {{ error }}
         </p>
 
-        <div *ngIf="device$ | async as device; else noDevice">
+        <div *ngIf="scanning$ | async" class="scanning-indicator">
+          <mat-spinner diameter="24"></mat-spinner>
+          <span>Scanning for devices...</span>
+        </div>
+
+        <div *ngIf="deviceInfo$ | async as deviceInfo; else noDevice">
           <div class="device-info">
-            <mat-icon class="device-icon">bluetooth_connected</mat-icon>
-            <h3>{{ device.name || 'Unknown Device' }}</h3>
-            <p>ID: {{ device.id }}</p>
-            <p class="status-badge connected">Connected</p>
+            <div class="device-header">
+              <mat-icon class="device-icon">bluetooth_connected</mat-icon>
+              <div class="device-details">
+                <h3>{{ deviceInfo.name || 'Unknown Device' }}</h3>
+                <p class="device-id">ID: {{ deviceInfo.id }}</p>
+                <p class="last-seen">Last seen: {{ deviceInfo.lastSeen | date:'short' }}</p>
+                <p class="device-distance" *ngIf="deviceInfo.distanceCm !== undefined">
+                  Distance: {{ deviceInfo.distanceCm }} cm
+                </p>
+              </div>
+            </div>
+            
+            <mat-divider></mat-divider>
+            
+            <div class="device-services" *ngIf="deviceInfo.serviceUUIDs && deviceInfo.serviceUUIDs.length > 0">
+              <h4>Available Services:</h4>
+              <mat-chip-set>
+                <mat-chip *ngFor="let serviceUuid of deviceInfo.serviceUUIDs">
+                  {{ getServiceName(serviceUuid) }}
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+            
+            <div class="connection-status">
+              <mat-icon class="status-icon connected">check_circle</mat-icon>
+              <span class="status-text">Connected</span>
+            </div>
           </div>
         </div>
 
@@ -24,19 +53,68 @@
           <div class="placeholder">
             <mat-icon class="placeholder-icon">bluetooth_searching</mat-icon>
             <p>No device connected</p>
+            <p class="help-text">Use the scan buttons below to find BLE devices or select from your device history</p>
           </div>
         </ng-template>
       </div>
     </mat-card-content>
 
     <mat-card-actions align="end">
-      <button mat-raised-button color="primary" (click)="scan()" *ngIf="!(connectionStatus$ | async)">
-        <mat-icon>search</mat-icon> Scan for Devices
+      <button mat-raised-button 
+              color="primary" 
+              (click)="scan()" 
+              *ngIf="!(connectionStatus$ | async) && !(scanning$ | async)">
+        <mat-icon>search</mat-icon> Scan All Devices
       </button>
       
-      <button mat-raised-button color="accent" (click)="goToDashboard()" *ngIf="connectionStatus$ | async">
+      <button mat-stroked-button 
+              color="primary" 
+              (click)="scanWithFilters()" 
+              *ngIf="!(connectionStatus$ | async) && !(scanning$ | async)">
+        <mat-icon>filter_list</mat-icon> Scan Common Devices
+      </button>
+      
+      <button mat-raised-button 
+              color="accent" 
+              (click)="goToDashboard()" 
+              *ngIf="connectionStatus$ | async">
         <mat-icon>dashboard</mat-icon> Open Dashboard
       </button>
     </mat-card-actions>
   </mat-card>
+
+  <!-- Device History Section -->
+  <div class="device-history-section" *ngIf="!(connectionStatus$ | async)">
+    <mat-tab-group mat-stretch-tabs>
+      <mat-tab label="Favorites">
+        <div class="tab-content">
+          <app-device-list
+            [devices]="getFavorites()"
+            title="Favorite Devices"
+            emptyMessage="No favorite devices yet. Add devices to favorites for quick access."
+            emptyIcon="favorite_border"
+            [showMenu]="false"
+            (connectToDevice)="connectToDevice($event)"
+            (toggleFavorite)="toggleFavorite($event)"
+            (removeDevice)="removeDevice($event)">
+          </app-device-list>
+        </div>
+      </mat-tab>
+      
+      <mat-tab label="Recent Devices">
+        <div class="tab-content">
+          <app-device-list
+            [devices]="getRecentDevices()"
+            title="Recently Connected"
+            emptyMessage="No recent connections. Devices you connect to will appear here."
+            emptyIcon="history"
+            (connectToDevice)="connectToDevice($event)"
+            (toggleFavorite)="toggleFavorite($event)"
+            (removeDevice)="removeDevice($event)"
+            (clearAll)="clearHistory()">
+          </app-device-list>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
 </div>

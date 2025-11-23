@@ -1,10 +1,19 @@
 <div class="dashboard-container">
-    <mat-card class="device-card">
+    <!-- Device Info Card -->
+    <mat-card class="device-card" *ngIf="deviceInfo$ | async as deviceInfo">
         <mat-card-header>
             <mat-icon mat-card-avatar>bluetooth_connected</mat-icon>
-            <mat-card-title>{{ (device$ | async)?.name || 'Unknown Device' }}</mat-card-title>
-            <mat-card-subtitle>ID: {{ (device$ | async)?.id }}</mat-card-subtitle>
+            <mat-card-title>{{ deviceInfo.name || 'Unknown Device' }}</mat-card-title>
+            <mat-card-subtitle>{{ deviceInfo.id }}</mat-card-subtitle>
         </mat-card-header>
+        
+        <mat-card-content>
+            <p><strong>Connected:</strong> {{ deviceInfo.lastSeen | date:'medium' }}</p>
+            <div *ngIf="deviceInfo.serviceUUIDs && deviceInfo.serviceUUIDs.length > 0">
+                <p><strong>Services Available:</strong> {{ deviceInfo.serviceUUIDs.length }}</p>
+            </div>
+        </mat-card-content>
+        
         <mat-card-actions align="end">
             <button mat-stroked-button color="warn" (click)="disconnect()">
                 <mat-icon>bluetooth_disabled</mat-icon> Disconnect
@@ -12,26 +21,118 @@
         </mat-card-actions>
     </mat-card>
 
-    <div class="services-list">
-        <h3>Services</h3>
-        <mat-accordion>
-            <mat-expansion-panel *ngFor="let service of services">
-                <mat-expansion-panel-header>
-                    <mat-panel-title>
-                        {{ service.uuid }}
-                    </mat-panel-title>
-                    <mat-panel-description>
-                        Primary: {{ service.isPrimary }}
-                    </mat-panel-description>
-                </mat-expansion-panel-header>
+    <!-- Services List -->
+    <div class="services-section">
+        <h2>Services & Characteristics</h2>
+        
+        <div *ngIf="services$ | async as services; else loadingServices">
+            <mat-accordion *ngIf="services.length > 0; else noServices">
+                <mat-expansion-panel *ngFor="let service of services" class="service-panel">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>
+                            <mat-icon>settings</mat-icon>
+                            {{ getServiceName(service.uuid) }}
+                        </mat-panel-title>
+                        <mat-panel-description>
+                            {{ service.characteristics.length }} characteristic(s)
+                        </mat-panel-description>
+                    </mat-expansion-panel-header>
 
-                <p>Characteristics will appear here (implementation pending)</p>
-                <!-- TODO: List characteristics -->
-            </mat-expansion-panel>
-        </mat-accordion>
+                    <div class="service-content">
+                        <p class="service-uuid">UUID: {{ service.uuid }}</p>
+                        
+                        <div class="characteristics-list" *ngIf="service.characteristics.length > 0">
+                            <h4>Characteristics:</h4>
+                            
+                            <mat-card *ngFor="let char of service.characteristics" class="characteristic-card">
+                                <mat-card-header>
+                                    <mat-card-title class="char-title">
+                                        {{ getCharacteristicName(char.uuid) }}
+                                    </mat-card-title>
+                                    <mat-card-subtitle class="char-uuid">
+                                        {{ char.uuid }}
+                                    </mat-card-subtitle>
+                                </mat-card-header>
+                                
+                                <mat-card-content>
+                                    <!-- Properties -->
+                                    <div class="properties-section">
+                                        <h5>Properties:</h5>
+                                        <mat-chip-set>
+                                            <mat-chip *ngIf="char.properties.read">Read</mat-chip>
+                                            <mat-chip *ngIf="char.properties.write">Write</mat-chip>
+                                            <mat-chip *ngIf="char.properties.notify">Notify</mat-chip>
+                                            <mat-chip *ngIf="char.properties.indicate">Indicate</mat-chip>
+                                        </mat-chip-set>
+                                    </div>
 
-        <div *ngIf="services.length === 0" class="no-services">
-            <p>No services found or loading...</p>
+                                    <!-- Notification Data -->
+                                    <div *ngIf="notificationData[char.uuid]" class="notification-data">
+                                        <h5>Live Data:</h5>
+                                        <div class="data-display">{{ notificationData[char.uuid] }}</div>
+                                    </div>
+
+                                    <!-- Write Input -->
+                                    <div *ngIf="char.properties.write" class="write-section">
+                                        <mat-form-field appearance="outline" class="write-input">
+                                            <mat-label>Value to write</mat-label>
+                                            <input matInput 
+                                                   [(ngModel)]="writeValues[char.uuid]" 
+                                                   placeholder="Enter text or hex values">
+                                        </mat-form-field>
+                                    </div>
+                                </mat-card-content>
+                                
+                                <mat-card-actions>
+                                    <button mat-button 
+                                            *ngIf="char.properties.read"
+                                            (click)="readCharacteristic(char)">
+                                        <mat-icon>visibility</mat-icon> Read
+                                    </button>
+                                    
+                                    <button mat-button 
+                                            *ngIf="char.properties.write"
+                                            (click)="writeCharacteristic(char)"
+                                            [disabled]="!writeValues[char.uuid]">
+                                        <mat-icon>edit</mat-icon> Write
+                                    </button>
+                                    
+                                    <button mat-button 
+                                            *ngIf="char.properties.notify || char.properties.indicate"
+                                            (click)="toggleNotifications(char)"
+                                            [color]="notificationData[char.uuid] ? 'warn' : 'primary'">
+                                        <mat-icon>{{ notificationData[char.uuid] ? 'notifications_off' : 'notifications' }}</mat-icon>
+                                        {{ notificationData[char.uuid] ? 'Stop' : 'Start' }} Notifications
+                                    </button>
+                                </mat-card-actions>
+                            </mat-card>
+                        </div>
+                    </div>
+                </mat-expansion-panel>
+            </mat-accordion>
         </div>
+
+        <ng-template #noServices>
+            <mat-card class="no-data-card">
+                <mat-card-content>
+                    <div class="no-data">
+                        <mat-icon>info</mat-icon>
+                        <p>No services discovered yet</p>
+                        <p class="help-text">Services will appear automatically after connection</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </ng-template>
+
+        <ng-template #loadingServices>
+            <mat-card class="loading-card">
+                <mat-card-content>
+                    <div class="loading-content">
+                        <mat-spinner diameter="32"></mat-spinner>
+                        <p>Discovering services...</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </ng-template>
     </div>
 </div>

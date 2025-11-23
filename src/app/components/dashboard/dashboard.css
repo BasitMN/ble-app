@@ -1,0 +1,178 @@
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.device-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.services-section {
+  margin-top: 24px;
+}
+
+.services-section h2 {
+  color: #333;
+  margin-bottom: 16px;
+  font-size: 24px;
+}
+
+.service-panel {
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.service-panel mat-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.service-content {
+  padding: 16px 0;
+}
+
+.service-uuid {
+  font-family: monospace;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 16px;
+  word-break: break-all;
+}
+
+.characteristics-list h4 {
+  color: #333;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.characteristic-card {
+  margin-bottom: 16px;
+  border-left: 4px solid #3f51b5;
+}
+
+.char-title {
+  font-size: 16px;
+  color: #333;
+}
+
+.char-uuid {
+  font-family: monospace;
+  font-size: 12px;
+  color: #666;
+  word-break: break-all;
+}
+
+.properties-section {
+  margin-bottom: 16px;
+}
+
+.properties-section h5 {
+  margin: 0 0 8px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.notification-data {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f0f8ff;
+  border-radius: 4px;
+  border-left: 4px solid #2196f3;
+}
+
+.notification-data h5 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 14px;
+}
+
+.data-display {
+  font-family: monospace;
+  background-color: #fff;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  word-break: break-all;
+}
+
+.write-section {
+  margin-bottom: 16px;
+}
+
+.write-input {
+  width: 100%;
+}
+
+.no-data-card,
+.loading-card {
+  text-align: center;
+  padding: 40px;
+}
+
+.no-data,
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #666;
+}
+
+.no-data mat-icon,
+.loading-content mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+}
+
+.help-text {
+  font-size: 14px;
+  color: #999;
+}
+
+mat-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 10px;
+  }
+  
+  .char-uuid {
+    font-size: 10px;
+  }
+  
+  .service-uuid {
+    font-size: 10px;
+  }
+  
+  mat-card-actions {
+    flex-direction: column;
+  }
+  
+  mat-card-actions button {
+    width: 100%;
+  }
+}
+
+/* Animation for notification data updates */
+.notification-data {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { background-color: #f0f8ff; }
+  50% { background-color: #e3f2fd; }
+  100% { background-color: #f0f8ff; }
+}
